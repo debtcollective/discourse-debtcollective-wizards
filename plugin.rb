@@ -1,79 +1,82 @@
-# name: tdc-new-user-plugin
-# about: A plugin to extend the standard discourse new user process for The Debt Collective's purposes (https://github.com/debtcollective/parent/issues/18)
+# name: discourse-debtcollective-wizards
+# about: A plugin that holds our custom wizards logic
 # version: 0.0.1
 
 after_initialize do
-  add_user_custom_fields()
-  set_up_event_triggers()
+  class DebtCollective
+    class << self
+      def collectives
+        @collectives ||= [
+          "court_fines_and_fees",
+          "student_debt",
+          "housing_debt",
+          "auto_loans",
+          "payday_loans",
+          "medical_debt",
+          "for_profit_colleges",
+          "credit_card_debt",
+          "solidarity_bloc"
+        ]
+      end
 
-  # make the pretty group names available to the front-end via preload store
-  add_to_serializer(:site, :group_names) do
-    Group.order(:name).pluck(:name, :full_name)
-      .select { |name, full_name| ! full_name.nil? }
-      .map { |name, full_name| {:name => name, :full_name => full_name } }
-  end
-end
+      def add_user_to_groups(user, groups)
+        groups.each do |group_name, is_member|
+          group = Group.find_by(name: group_name)
 
-def add_user_custom_fields()
-  user_custom_fields = ['collectives', 'debt_amount', 'solidarity_how_can_you_help',
-    'solidarity_employment', 'solidarity_skills', 'phone']
+          if is_member
+            group.add(user)
+          else
+            group.remove(user)
+          end
 
-  user_custom_fields.each do |field_name|
-    add_to_serializer(:user, :custom_fields) { user.custom_fields[field_name] }
-    DiscoursePluginRegistry.serialized_current_user_fields << field_name
-  end
+          group.save
+        end
+      end
 
-  # ugly hack so that the custom fields don't get filtered out in UsersController.create
-  # technically not very robust (if another plugin erases OPTION_ATTR, for example)
-  # but I'm reasonably confident it won't be a problem
-  ::UserUpdater::OPTION_ATTR.concat [ :custom_fields => [
-    :debt_amount,
-    :solidarity_how_can_you_help,
-    :solidarity_skills,
-    :solidarity_employment,
-    :phone,
-    :collectives => [],
-  ] ]
-end
+      def send_solidarity_pm(user)
+        PostCreator.create(Discourse.system_user,
+          archetype: Archetype.private_message,
+          title: "Joining in solidarity",
+          raw: pm_content(user),
+          target_usernames: [user.username],
+          target_group_names: ["team"]
+        )
+      end
 
-def set_up_event_triggers()
-  DiscourseEvent.on(:user_created) do |user|
-    assign_user_groups(user)
-  end
+      private
 
-  DiscourseEvent.on(:user_updated) do |user|
-    assign_user_groups(user)
-  end
-end
+      def pm_content(user)
+        <<~CONTENT
+          Hello @#{user.username}!
 
-def assign_user_groups(user)
-  if user.custom_fields['collectives'].nil?
-    Rails.logger.warn('A user #{user.username} was created or updated without any collectives!')
-    return
-  end
+          We want to say thank you for joining wanting to help The Debt Collective. What skills you think you can contribute with to our cause?
 
-  if user.custom_fields['collectives'].is_a?(String)
-    # can happen if the user is a member of only one collective
-    user.custom_fields['collectives'] = [ user.custom_fields['collectives'] ]
-  end
-
-  collective_groups = ['for-profit-colleges', 'student-debt', 'credit-card-debt', 'housing-debt',
-    'payday-loans', 'auto-loans', 'court-fines-fees','medical-debt','solidarity-bloc' ]
-
-  collective_groups.each do |group_name|
-    group = Group.find_by(name: group_name)
-    if user.custom_fields['collectives'].include?(group_name)
-      # the user is in the collective
-      group.add(user)
-    else # the user is not in the collective
-      group.remove(user)
+          Thanks!
+        CONTENT
+      end
     end
+  end
 
-    vals = {user: user.username, group_name: group.name}
-    if group.save
-      Rails.logger.debug("Successfully updated %<user>s's membership in %<group_name>s" % vals)
-    else
-      Rails.logger.error("Unsuccessful attempt to update %<user>s's membership in %<group_name>s" % vals)
-    end
+  # welcome wizard step handler
+  # we only process the 'debt_types' step
+  CustomWizard::Builder.add_step_handler('welcome') do |builder|
+    current_step = builder.updater.step
+    updater = builder.updater
+    wizard = builder.wizard
+    user = wizard.user
+
+    next unless current_step.id == "debt_types"
+
+    # fields returns an ActiveParams object
+    # we cast it as hash
+    step_data = updater.fields.to_h
+
+    groups = step_data.slice(*DebtCollective.collectives)
+    groups_to_join = groups.select { |key, value| groups[key] == true }
+
+    raise "You need to select at least one" if groups_to_join.empty?
+
+    DebtCollective.add_user_to_groups(user, groups)
+    DebtCollective.send_solidarity_pm(user) if groups_to_join.include?('solidarity_bloc')
   end
 end
