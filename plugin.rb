@@ -34,9 +34,12 @@ after_initialize do
       end
 
       def send_solidarity_pm(user)
-        PostCreator.create(Discourse.system_user,
+        admin = User.find_by_username(SiteSettings.tdc_solidarity_bloc_message_author)
+        admin ||= Discourse.system_user
+
+        PostCreator.create(admin,
           archetype: Archetype.private_message,
-          title: "Joining in solidarity",
+          title: "Solidarity Bloc",
           raw: pm_content(user),
           target_usernames: [user.username],
           target_group_names: ["team"]

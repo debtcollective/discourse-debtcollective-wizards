@@ -1,0 +1,5 @@
+plugins:
+  debtcollective_solidarity_message_author:
+    client: true
+    default: 'system'
+    type: 'username'
