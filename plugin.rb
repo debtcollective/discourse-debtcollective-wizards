@@ -49,9 +49,7 @@ after_initialize do
         <<~CONTENT
           Hello @#{user.username}!
 
-          We want to say thank you for joining wanting to help The Debt Collective. What skills you think you can contribute with to our cause?
-
-          Thanks!
+          Thank you for offering to help in solidarity with people in debt. Tell us a little about yourself and what skills you have to share so we can get started.
         CONTENT
       end
     end
@@ -74,7 +72,11 @@ after_initialize do
     groups = step_data.slice(*DebtCollective.collectives)
     groups_to_join = groups.select { |key, value| groups[key] == true }
 
-    raise "You need to select at least one" if groups_to_join.empty?
+    if groups_to_join.empty? 
+      # we use the wizard id as field for the error to be shown as a step error
+      updater.errors.add(wizard.id, "You must select at least one")
+      next
+    end
 
     DebtCollective.add_user_to_groups(user, groups)
     DebtCollective.send_solidarity_pm(user) if groups_to_join.include?('solidarity_bloc')
