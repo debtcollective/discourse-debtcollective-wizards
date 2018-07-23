@@ -34,7 +34,7 @@ after_initialize do
       end
 
       def send_solidarity_pm(user)
-        admin = User.find_by_username(SiteSettings.tdc_solidarity_bloc_message_author)
+        admin = User.find_by_username(SiteSetting.debtcollective_solidarity_message_author)
         admin ||= Discourse.system_user
 
         PostCreator.create(admin,
