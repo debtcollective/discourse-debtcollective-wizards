@@ -42,7 +42,7 @@ after_initialize do
           title: "Solidarity Bloc",
           raw: pm_content(user),
           target_usernames: [user.username],
-          target_group_names: ["team"]
+          target_group_names: []
         )
       end
 
