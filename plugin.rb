@@ -3,6 +3,10 @@
 # version: 0.0.1
 
 after_initialize do
+  if Rails.env.production?
+    SiteSetting.debtcollective_solidarity_message_author = 'laurahanna'
+  end
+
   class DebtCollective
     class << self
       def collectives
@@ -34,26 +38,16 @@ after_initialize do
       end
 
       def send_solidarity_pm(user)
-        admin = User.find_by_username(SiteSetting.debtcollective_solidarity_message_author)
-        admin ||= Discourse.system_user
+        bloc_manager = User.find_by_username(SiteSetting.debtcollective_solidarity_message_author)
+        bloc_manager ||= Discourse.system_user
 
-        PostCreator.create(admin,
+        PostCreator.create(bloc_manager,
           archetype: Archetype.private_message,
-          title: "Solidarity Bloc",
-          raw: pm_content(user),
+          title: SiteSetting.debtcollective_solidarity_message_title,
+          raw: SiteSetting.debtcollective_solidarity_message_content % user.username,
           target_usernames: [user.username],
           target_group_names: []
         )
-      end
-
-      private
-
-      def pm_content(user)
-        <<~CONTENT
-          Hello @#{user.username}!
-
-          Thank you for offering to help in solidarity with people in debt. Tell us a little about yourself and what skills you have to share so we can get started.
-        CONTENT
       end
     end
   end
