@@ -44,7 +44,7 @@ after_initialize do
         PostCreator.create(bloc_manager,
           archetype: Archetype.private_message,
           title: SiteSetting.debtcollective_solidarity_message_title,
-          raw: SiteSetting.debtcollective_solidarity_message_content % user.username,
+          raw: SiteSetting.debtcollective_solidarity_message_content % { :user => user.username},
           target_usernames: [user.username],
           target_group_names: []
         )

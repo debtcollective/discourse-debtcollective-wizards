@@ -8,7 +8,7 @@ plugins:
     default: 'Solidarity Bloc'
   debtcollective_solidarity_message_content:
     client: false
-    default: 'Hello %s!
+    default: "Hello %{user}!
 
 
-          Thank you for offering to help in solidarity with people in debt. Tell us a little about yourself and what skills you have to share so we can get started.'
+          Thank you for offering to help in solidarity with people in debt. Tell us a little about yourself and what skills you have to share so we can get started."
