@@ -1,13 +1,4 @@
 plugins:
-  debtcollective_solidarity_message_author:
+  debtcollective_wizards_enabled:
     client: false
-    default: "system"
-  debtcollective_solidarity_message_title:
-    client: false
-    default: "Solidarity Bloc"
-  debtcollective_solidarity_message_content:
-    client: false
-    default: "Hello %{user}!
-
-
-      Thank you for offering to help in solidarity with people in debt. Tell us a little about yourself and what skills you have to share so we can get started."
+    default: true

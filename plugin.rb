@@ -2,11 +2,9 @@
 # about: A plugin that holds our custom wizards logic
 # version: 0.0.1
 
-after_initialize do
-  if Rails.env.production?
-    SiteSetting.debtcollective_solidarity_message_author = 'laurahanna'
-  end
+enabled_site_setting :debtcollective_wizards_enabled
 
+after_initialize do
   class DebtCollective
     class << self
       def collectives
@@ -44,13 +42,17 @@ after_initialize do
         PostCreator.create(bloc_manager,
           archetype: Archetype.private_message,
           title: SiteSetting.debtcollective_solidarity_message_title,
-          raw: SiteSetting.debtcollective_solidarity_message_content % { :user => user.username},
+          raw: SiteSetting.debtcollective_solidarity_message_content % { user: user.username },
           target_usernames: [user.username],
           target_group_names: []
         )
       end
     end
   end
+
+  # Registering User profile fields
+  User.register_custom_field_type('phone_number', :text)
+  User.register_custom_field_type('zip_code', :text)
 
   # welcome wizard step handler
   # we only process the 'debt_types' step
