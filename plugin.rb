@@ -35,6 +35,10 @@ after_initialize do
         end
       end
 
+      def solidarity_pm_content(user)
+        "Hello @#{user.username}!\n\nThank you for offering to help in solidarity with people in debt. Tell us a little about yourself and what skills you have to share so we can get started."
+      end
+
       def send_solidarity_pm(user)
         bloc_manager = User.find_by_username(SiteSetting.debtcollective_solidarity_message_author)
         bloc_manager ||= Discourse.system_user
@@ -42,7 +46,7 @@ after_initialize do
         PostCreator.create(bloc_manager,
           archetype: Archetype.private_message,
           title: SiteSetting.debtcollective_solidarity_message_title,
-          raw: SiteSetting.debtcollective_solidarity_message_content % { user: user.username },
+          raw: solidarity_pm_content(user),
           target_usernames: [user.username],
           target_group_names: []
         )
@@ -71,7 +75,7 @@ after_initialize do
     groups = step_data.slice(*DebtCollective.collectives)
     groups_to_join = groups.select { |key, value| groups[key] == true }
 
-    if groups_to_join.empty? 
+    if groups_to_join.empty?
       # we use the wizard id as field for the error to be shown as a step error
       updater.errors.add(wizard.id, "You must select at least one")
       next
