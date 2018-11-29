@@ -6,3 +6,6 @@ plugins:
     default: "Dispute Your Debt, Dispute Your Debt, https://tools.debtcollective.org, vdo, self, remove"
     client: true
     type: list
+  debtcollective_solidarity_message_author:
+    default: "system"
+    client: false
