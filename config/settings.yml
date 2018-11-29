@@ -2,3 +2,6 @@ plugins:
   debtcollective_wizards_enabled:
     client: false
     default: true
+  debtcollective_solidarity_message_author:
+    default: "system"
+    client: false

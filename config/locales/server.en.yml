@@ -1,3 +1,4 @@
 en:
   site_settings:
     debtcollective_wizards_enabled: "Enable Debt Collective wizards"
+    debtcollective_solidarity_message_author: "Solidarity bloc welcome message author"
