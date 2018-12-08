@@ -56,7 +56,7 @@ after_initialize do
 
   # Registering User profile fields
   User.register_custom_field_type('phone_number', :text)
-  User.register_custom_field_type('zip_code', :text)
+  User.register_custom_field_type('zip', :text)
 
   # welcome wizard step handler
   # we only process the 'debt_types' step
